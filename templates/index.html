@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudNet | Traffic Monitor</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+    --bg: #f5f7fb;
+    --white: #ffffff;
+    --text: #202a3b;
+    --muted: #8993a5;
+    --blue: #3978f6;
+    --border: #edf0f6;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 235px;
+    background: #172238;
+    color: #b9c5d9;
+    padding: 28px 17px;
+    flex-shrink: 0;
+}
+
+.brand {
+    font-size: 21px;
+    font-weight: 750;
+    color: white;
+    margin: 4px 8px 42px;
+}
+
+.brand span { color: #60a5fa; }
+
+.nav-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: #78869e;
+    margin: 25px 10px 12px;
+}
+
+.nav {
+    display: block;
+    padding: 13px 12px;
+    border-radius: 8px;
+    margin-bottom: 7px;
+    color: #b9c5d9;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.nav.active {
+    background: #2b4e89;
+    color: white;
+}
+
+.nav:hover { background: #263651; }
+
+.sidebar-bottom {
+    margin-top: 100px;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #93a2b9;
+}
+
+main {
+    flex: 1;
+    min-width: 0;
+    padding: 28px 32px;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 28px;
+}
+
+.topbar h1 {
+    font-size: 25px;
+    margin: 0 0 8px;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.demo {
+    padding: 9px 13px;
+    border-radius: 20px;
+    background: #e7f8ef;
+    color: #168453;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.notice {
+    padding: 13px 16px;
+    background: #eef5ff;
+    border: 1px solid #dceaff;
+    border-radius: 9px;
+    color: #45658e;
+    font-size: 12px;
+    line-height: 1.7;
+    margin-bottom: 22px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 17px;
+    margin-bottom: 22px;
+}
+
+.card, .panel {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(25, 40, 70, 0.025);
+}
+
+.card { padding: 20px; }
+
+.card-title {
+    font-size: 12px;
+    color: #7d8799;
+    margin-bottom: 18px;
+}
+
+.card-value {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    overflow-wrap: anywhere;
+}
+
+.card-foot {
+    font-size: 11px;
+    color: #929bad;
+}
+
+.blue { color: #3978f6; }
+.orange { color: #e9a23b; }
+.green { color: #15976b; }
+.red { color: #e45b65; }
+
+.charts {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(230px, 1fr);
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.panel { padding: 22px; min-width: 0; }
+
+.panel-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.panel h2 {
+    font-size: 15px;
+    margin: 0 0 7px;
+}
+
+.panel-subtitle {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.chart-box {
+    height: 255px;
+    position: relative;
+    margin-top: 18px;
+}
+
+.protocol-box {
+    height: 220px;
+    position: relative;
+    max-width: 290px;
+    margin: 20px auto 10px;
+}
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    color: #727d90;
+    font-size: 11px;
+    margin-top: 15px;
+}
+
+.dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.table-wrap { overflow-x: auto; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    margin-top: 18px;
+    white-space: nowrap;
+}
+
+th {
+    font-size: 11px;
+    color: #929bad;
+    font-weight: 600;
+    background: #fafbfe;
+}
+
+td, th {
+    padding: 15px 12px;
+    border-bottom: 1px solid #f0f2f7;
+    font-size: 12px;
+}
+
+td { color: #536075; }
+
+.badge {
+    padding: 5px 9px;
+    border-radius: 15px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.normal {
+    color: #14845b;
+    background: #e7f8ef;
+}
+
+.warning {
+    color: #c47a16;
+    background: #fff3dc;
+}
+
+.footer {
+    padding: 20px 0 4px;
+    color: #929bad;
+    font-size: 11px;
+    text-align: center;
+}
+
+@media (max-width: 1050px) {
+    .sidebar { width: 190px; }
+    main { padding: 22px; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+    .layout { display: block; }
+    .sidebar { width: 100%; padding: 16px; }
+    .brand { margin: 4px 8px 16px; }
+    .nav-label, .sidebar-bottom { display: none; }
+    .nav {
+        display: inline-block;
+        margin: 3px;
+        padding: 9px;
+    }
+    main { padding: 18px 12px; }
+    .topbar h1 { font-size: 21px; }
+    .charts { grid-template-columns: 1fr; }
+    .stats { gap: 10px; }
+    .card { padding: 14px; }
+    .card-value { font-size: 23px; }
+}
+</style>
+</head>
+
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+    <div class="brand">☁ Cloud<span>Net</span></div>
+
+    <div class="nav-label">MAIN MENU</div>
+    <a href="#dashboard" class="nav active">▦ &nbsp; Dashboard</a>
+    <a href="#analysis" class="nav">⌁ &nbsp; Traffic Analysis</a>
+    <a href="#protocols" class="nav">◉ &nbsp; Protocols</a>
+    <a href="#records" class="nav">▤ &nbsp; Traffic Records</a>
+
+    <div class="nav-label">SECURITY</div>
+    <a href="#alerts" class="nav">⚑ &nbsp; Alerts</a>
+
+    <div class="sidebar-bottom">
+        <hr style="border-color:#344057">
+        NETWORK MONITOR<br>
+        Version 1.0.0<br>
+        Student Project
+    </div>
+</aside>
+
+<main id="dashboard">
+
+    <div class="topbar">
+        <div>
+            <h1>Network Dashboard</h1>
+            <div class="subtitle">
+                Monitor network activity and identify unusual traffic patterns.
+            </div>
+        </div>
+        <div class="demo">● LIVE DEMO</div>
+    </div>
+
+    <div class="notice">
+        <strong>Student project demo:</strong>
+        This dashboard displays simulated traffic records and protocol data.
+        Cloud deployment and real packet-level monitoring can be added in the next stage.
+    </div>
+
+    <section class="stats">
+        <div class="card">
+            <div class="card-title">Total Traffic Volume</div>
+            <div class="card-value blue" id="volume">2.03 MB</div>
+            <div class="card-foot">Recorded demo traffic</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Packets Observed</div>
+            <div class="card-value" id="packets">2,725</div>
+            <div class="card-foot">Simulated packet count</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Traffic Records</div>
+            <div class="card-value green" id="recordCount">25</div>
+            <div class="card-foot">Records shown in the demo</div>
+        </div>
+
+        <div class="card" id="alerts">
+            <div class="card-title">Potential Anomalies</div>
+            <div class="card-value red" id="anomalies">2</div>
+            <div class="card-foot">Demo rule-based alerts</div>
+        </div>
+    </section>
+
+    <section class="charts" id="analysis">
+
+        <div class="panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Traffic Activity</h2>
+                    <div class="panel-subtitle">Bytes per measurement</div>
+                </div>
+                <span class="demo">● DEMO DATA</span>
+            </div>
+            <div class="chart-box">
+                <canvas id="trafficChart"></canvas>
+            </div>
+        </div>
+
+        <div class="panel" id="protocols">
+            <div class="panel-heading">
+                <div>
+                    <h2>Protocol Distribution</h2>
+                    <div class="panel-subtitle">Demo traffic by protocol</div>
+                </div>
+            </div>
+            <div class="protocol-box">
+                <canvas id="protocolChart"></canvas>
+            </div>
+            <div class="legend">
+                <span><i class="dot" style="background:#3978f6"></i>TCP</span>
+                <span><i class="dot" style="background:#8065dc"></i>UDP</span>
+                <span><i class="dot" style="background:#22b8a7"></i>ICMP</span>
+                <span><i class="dot" style="background:#e9a23b"></i>HTTP/HTTPS</span>
+                <span><i class="dot" style="background:#e66c79"></i>Other</span>
+            </div>
+        </div>
+
+    </section>
+
+    <section class="panel" id="records">
+        <div class="panel-heading">
+            <div>
+                <h2>Recent Traffic Records</h2>
+                <div class="panel-subtitle">
+                    Example records for dashboard demonstration
+                </div>
+            </div>
+            <span class="panel-subtitle" id="updated">Waiting for update</span>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>TIME</th>
+                        <th>DOWNLOAD</th>
+                        <th>UPLOAD</th>
+                        <th>TOTAL SENT</th>
+                        <th>TOTAL RECIEVED</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody id="recordTable"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="panel-subtitle">
+    Live system traffic samples
+</div>
+</main>
+</div>
+<script>
+const trafficLabels = [];
+const downloads = [];
+const uploads = [];
+const records = [];
+
+const trafficChart = new Chart(
+    document.getElementById("trafficChart"),
+    {
+        type: "line",
+        data: {
+            labels: trafficLabels,
+            datasets: [
+                {
+                    label: "Download (KiB/s)",
+                    data: downloads,
+                    borderColor: "#3978f6",
+                    backgroundColor: "rgba(57,120,246,0.08)",
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: "Upload (KiB/s)",
+                    data: uploads,
+                    borderColor: "#e9a23b",
+                    backgroundColor: "transparent",
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    }
+);
+
+// Protocol data remains illustrative until packet capture is added.
+new Chart(document.getElementById("protocolChart"), {
+    type: "doughnut",
+    data: {
+        labels: ["TCP", "UDP", "ICMP", "HTTP/HTTPS", "Other"],
+        datasets: [{
+            data: [15, 12, 4, 64, 5],
+            backgroundColor: [
+                "#3978f6", "#8065dc", "#22b8a7",
+                "#e9a23b", "#e66c79"
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "68%"
+    }
+});
+
+function addRecord(data) {
+    records.unshift(data);
+    if (records.length > 10) records.pop();
+
+    document.getElementById("recordTable").innerHTML =
+        records.map(row => `
+            <tr>
+                <td>${row.timestamp}</td>
+                <td>${row.download_kbps.toFixed(2)} KiB/s</td>
+                <td>${row.upload_kbps.toFixed(2)} KiB/s</td>
+                <td>${row.total_sent_mb.toFixed(2)} MiB</td>
+                <td>${row.total_received_mb.toFixed(2)} MiB</td>
+                <td>
+                    <span class="badge ${
+                        row.status === "Normal" ? "normal" : "warning"
+                    }">${row.status}</span>
+                </td>
+            </tr>
+        `).join("");
+}
+
+async function updateDashboard() {
+    const status = document.querySelector(".demo");
+
+    try {
+        const response = await fetch("/api/traffic");
+
+        if (!response.ok) {
+            throw new Error("API returned HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        document.getElementById("volume").textContent =
+            data.traffic_volume_mb.toFixed(2) + " MiB";
+
+        document.getElementById("packets").textContent =
+            (data.packets_sent + data.packets_received).toLocaleString();
+
+        document.getElementById("recordCount").textContent =
+            data.record_count.toLocaleString();
+
+        document.getElementById("anomalies").textContent =
+            data.anomaly_count.toLocaleString();
+
+        trafficLabels.push(data.timestamp.split(" ")[1]);
+        downloads.push(data.download_kbps);
+        uploads.push(data.upload_kbps);
+
+        if (trafficLabels.length > 20) {
+            trafficLabels.shift();
+            downloads.shift();
+            uploads.shift();
+        }
+
+        trafficChart.update("none");
+        addRecord(data);
+
+        document.getElementById("updated").textContent =
+            "Updated " + new Date().toLocaleTimeString();
+
+        status.textContent = "● LIVE SYSTEM DATA";
+        status.style.background = "#e7f8ef";
+        status.style.color = "#168453";
+
+        const alertElement = document.querySelector(
+            "#alerts .card-foot"
+        );
+
+        alertElement.textContent =
+            data.status === "Normal"
+                ? "No high-rate threshold triggered"
+                : "High traffic rate detected";
+
+    } catch (error) {
+        console.error("Traffic monitoring error:", error);
+
+        status.textContent = "● CONNECTION ERROR";
+        status.style.background = "#fee2e2";
+        status.style.color = "#b91c1c";
+
+        document.getElementById("updated").textContent =
+            "Could not fetch live statistics";
+    }
+}
+
+updateDashboard();
+setInterval(updateDashboard, 3000);
+</script>
+
+</body>
+</html>
