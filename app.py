@@ -8,7 +8,12 @@ import psutil
 
 app = Flask(__name__)
 
-LOG_FILE = "traffic_log.csv"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+if os.getenv("VERCEL"):
+    LOG_FILE = "/tmp/traffic_log.csv"
+else:
+    LOG_FILE = os.path.join(BASE_DIR, "traffic_log.csv")
 lock = threading.Lock()
 
 previous = psutil.net_io_counters()
